@@ -77,6 +77,17 @@ function App() {
   }
 
   async function getTokenBalance() {
+    if (!userAddress) {
+      toast({
+        title: "Input Error",
+        description: "Please enter a valid Ethereum address.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+    
     setLoading(true);  // Set loading to true when the function starts
     const config = {
       apiKey: import.meta.env.VITE_API_KEY,
