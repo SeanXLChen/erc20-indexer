@@ -175,7 +175,7 @@ function App() {
                     </Flex>
                   </Td>
                   <Td>{tokenDataObjects[index]?.symbol}</Td>
-                  <Td isNumeric>{Utils.formatUnits(token.tokenBalance, tokenDataObjects[index]?.decimals)}</Td>
+                  <Td isNumeric>{parseFloat(Utils.formatUnits(token.tokenBalance, tokenDataObjects[index]?.decimals)).toFixed(2)}</Td>
                 </Tr>
               ))}
             </Tbody>
