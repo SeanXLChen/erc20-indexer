@@ -9,6 +9,8 @@ import {
   SimpleGrid,
   Text,
   useToast,
+  Spinner,
+  useColorModeValue,
 } from '@chakra-ui/react';
 import { Alchemy, Network, Utils } from 'alchemy-sdk';
 import { useState } from 'react';
@@ -18,6 +20,7 @@ function App() {
   const [connected, setConnected] = useState(false);
   const [userAddress, setUserAddress] = useState('');
   const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [hasQueried, setHasQueried] = useState(false);
   const [tokenDataObjects, setTokenDataObjects] = useState([]);
   const toast = useToast();
@@ -39,6 +42,7 @@ function App() {
           status: "success",
           duration: 5000,
           isClosable: true,
+          position: "top-right",
         });
       } catch (error) {
         console.error("Error connecting to wallet: ", error);
@@ -48,6 +52,7 @@ function App() {
           status: "error",
           duration: 5000,
           isClosable: true,
+          position: "top-right",
         });
       }
     } else {
@@ -60,6 +65,7 @@ function App() {
         status: "info",
         duration: 5000,
         isClosable: true,
+        position: "top-right",
       });
     }
   }
@@ -88,23 +94,23 @@ function App() {
     setHasQueried(true);
   }
   return (
-    <Box w="100vw">
+    <Box w="100vw" p={5} bg={useColorModeValue('gray.50', 'gray.900')}>
       <Center>
         <Flex
           alignItems={'center'}
           justifyContent="center"
           flexDirection={'column'}
         >
-          <Heading mb={0} fontSize={36}>
+          <Heading mb={4} fontSize={36}>
             ERC-20 Token Indexer
           </Heading>
-          <Text>
+          <Text fontSize="lg" mb={4}>
             Connect your wallet to check all your ERC-20 token balances.
           </Text>
-          <Button onClick={connectWallet}>
+          <Button colorScheme={connected ? "red" : "teal"} onClick={connectWallet}>
             {connected ? "Disconnect Wallet" : "Connect Wallet"}
           </Button>
-          {userAddress && <Text>Connected Address: {userAddress}</Text>}
+          {userAddress && <Text mt={2}>Connected Address: {userAddress}</Text>}
         </Flex>
       </Center>
       <Flex
@@ -113,7 +119,7 @@ function App() {
         alignItems="center"
         justifyContent={'center'}
       >
-        <Heading mt={42}>
+        <Heading mt={42} mb={6}>
           Get all the ERC-20 token balances of this address:
         </Heading>
         <Input
@@ -126,40 +132,24 @@ function App() {
           bgColor="white"
           fontSize={24}
         />
-        <Button fontSize={20} onClick={getTokenBalance} mt={36} bgColor="blue">
+        <Button fontSize={20} onClick={getTokenBalance} mt={4} bgColor="teal" isLoading={loading} loadingText="Checking Balances">
           Check ERC-20 Token Balances
         </Button>
 
-        <Heading my={36}>ERC-20 token balances:</Heading>
+        <Heading my={12}>ERC-20 token balances:</Heading>
 
-        {hasQueried ? (
-          <SimpleGrid w={'90vw'} columns={4} spacing={24}>
-            {results.tokenBalances.map((e, i) => {
-              return (
-                <Flex
-                  flexDir={'column'}
-                  color="white"
-                  bg="blue"
-                  w={'20vw'}
-                  key={e.id}
-                >
-                  <Box>
-                    <b>Symbol:</b> ${tokenDataObjects[i].symbol}&nbsp;
-                  </Box>
-                  <Box>
-                    <b>Balance:</b>&nbsp;
-                    {Utils.formatUnits(
-                      e.tokenBalance,
-                      tokenDataObjects[i].decimals
-                    )}
-                  </Box>
-                  <Image src={tokenDataObjects[i].logo} />
-                </Flex>
-              );
-            })}
-          </SimpleGrid>
+        {loading ? (
+          <Spinner size="xl" />
         ) : (
-          'Please make a query! This may take a few seconds...'
+          <SimpleGrid columns={3} spacing={4} p={4} w="full">
+            {results.tokenBalances.map((e, i) => (
+              <Flex flexDirection={'column'} bg="blue.600" color="white" p={3} borderRadius="md" key={i}>
+                <Image src={tokenDataObjects[i]?.logo} boxSize="50px" alt={tokenDataObjects[i]?.name} />
+                <Text fontWeight="bold">{tokenDataObjects[i]?.symbol}</Text>
+                <Text>Balance: {Utils.formatUnits(e.tokenBalance, tokenDataObjects[i]?.decimals)}</Text>
+              </Flex>
+            ))}
+          </SimpleGrid>
         )}
       </Flex>
     </Box>
