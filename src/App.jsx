@@ -71,26 +71,36 @@ function App() {
   }
 
   async function getTokenBalance() {
+    setLoading(true);  // Set loading to true when the function starts
     const config = {
       apiKey: import.meta.env.VITE_API_KEY,
       network: Network.ETH_MAINNET,
     };
 
-    const alchemy = new Alchemy(config);
-    const data = await alchemy.core.getTokenBalances(userAddress);
+    try {
+      const alchemy = new Alchemy(config);
+      const data = await alchemy.core.getTokenBalances(userAddress);
+      setResults(data);
 
-    setResults(data);
-
-    const tokenDataPromises = [];
-
-    for (let i = 0; i < data.tokenBalances.length; i++) {
-      const tokenData = alchemy.core.getTokenMetadata(
-        data.tokenBalances[i].contractAddress
+      const tokenDataPromises = data.tokenBalances.map(token =>
+        alchemy.core.getTokenMetadata(token.contractAddress)
       );
-      tokenDataPromises.push(tokenData);
-    }
 
-    setTokenDataObjects(await Promise.all(tokenDataPromises));
+      const tokenDataObjects = await Promise.all(tokenDataPromises);
+      setTokenDataObjects(tokenDataObjects);
+    } catch (error) {
+      console.error("Failed to fetch token balances: ", error);
+      toast({
+        title: "Fetching Error",
+        description: "Failed to fetch token balances.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "top-right",
+      });
+    } finally {
+      setLoading(false);  // Ensure loading is set to false after operations complete
+    }
     setHasQueried(true);
   }
   return (
@@ -140,7 +150,7 @@ function App() {
 
         {loading ? (
           <Spinner size="xl" />
-        ) : (
+        ) : hasQueried && results.tokenBalances.length > 0 ? (
           <SimpleGrid columns={3} spacing={4} p={4} w="full">
             {results.tokenBalances.map((e, i) => (
               <Flex flexDirection={'column'} bg="blue.600" color="white" p={3} borderRadius="md" key={i}>
@@ -150,6 +160,8 @@ function App() {
               </Flex>
             ))}
           </SimpleGrid>
+        ) : (
+          <Text>No token balances found.</Text>
         )}
       </Flex>
     </Box>
