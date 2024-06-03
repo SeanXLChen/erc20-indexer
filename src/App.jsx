@@ -11,6 +11,12 @@ import {
   useToast,
   Spinner,
   useColorModeValue,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
 } from '@chakra-ui/react';
 import { Alchemy, Network, Utils } from 'alchemy-sdk';
 import { useState } from 'react';
@@ -151,15 +157,29 @@ function App() {
         {loading ? (
           <Spinner size="xl" />
         ) : hasQueried && results.tokenBalances.length > 0 ? (
-          <SimpleGrid columns={3} spacing={4} p={4} w="full">
-            {results.tokenBalances.map((e, i) => (
-              <Flex flexDirection={'column'} bg="blue.600" color="white" p={3} borderRadius="md" key={i}>
-                <Image src={tokenDataObjects[i]?.logo} boxSize="50px" alt={tokenDataObjects[i]?.name} />
-                <Text fontWeight="bold">{tokenDataObjects[i]?.symbol}</Text>
-                <Text>Balance: {Utils.formatUnits(e.tokenBalance, tokenDataObjects[i]?.decimals)}</Text>
-              </Flex>
-            ))}
-          </SimpleGrid>
+          <Table variant="simple">
+            <Thead>
+              <Tr>
+                <Th>Token</Th>
+                <Th>Symbol</Th>
+                <Th isNumeric>Balance</Th>
+              </Tr>
+            </Thead>
+            <Tbody>
+              {results.tokenBalances.map((token, index) => (
+                <Tr key={index}>
+                  <Td>
+                    <Flex align="center">
+                      <Image src={tokenDataObjects[index]?.logo} boxSize="30px" mr={2} />
+                      {tokenDataObjects[index]?.name}
+                    </Flex>
+                  </Td>
+                  <Td>{tokenDataObjects[index]?.symbol}</Td>
+                  <Td isNumeric>{token.tokenBalance}</Td>
+                </Tr>
+              ))}
+            </Tbody>
+          </Table>
         ) : (
           <Text>No token balances found.</Text>
         )}
