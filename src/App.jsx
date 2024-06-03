@@ -8,15 +8,61 @@ import {
   Input,
   SimpleGrid,
   Text,
+  useToast,
 } from '@chakra-ui/react';
 import { Alchemy, Network, Utils } from 'alchemy-sdk';
 import { useState } from 'react';
+import { ethers } from 'ethers';
 
 function App() {
+  const [connected, setConnected] = useState(false);
   const [userAddress, setUserAddress] = useState('');
   const [results, setResults] = useState([]);
   const [hasQueried, setHasQueried] = useState(false);
   const [tokenDataObjects, setTokenDataObjects] = useState([]);
+  const toast = useToast();
+
+  // Function to connect/disconnect the wallet
+  async function connectWallet() {
+    if (!connected) {
+      try {
+        // Connect the wallet using ethers.js
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        await provider.send("eth_requestAccounts", []); // Request access to the user's accounts
+        const signer = await provider.getSigner();
+        const _walletAddress = await signer.getAddress();
+        setConnected(true);
+        setUserAddress(_walletAddress);
+        toast({
+          title: "Connected",
+          description: "Wallet connected successfully.",
+          status: "success",
+          duration: 5000,
+          isClosable: true,
+        });
+      } catch (error) {
+        console.error("Error connecting to wallet: ", error);
+        toast({
+          title: "Connection Error",
+          description: "Failed to connect the wallet.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        });
+      }
+    } else {
+      // Disconnect the wallet
+      setConnected(false);
+      setUserAddress("");
+      toast({
+        title: "Disconnected",
+        description: "Wallet disconnected.",
+        status: "info",
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+  }
 
   async function getTokenBalance() {
     const config = {
@@ -53,9 +99,12 @@ function App() {
             ERC-20 Token Indexer
           </Heading>
           <Text>
-            Plug in an address and this website will return all of its ERC-20
-            token balances!
+            Connect your wallet to check all your ERC-20 token balances.
           </Text>
+          <Button onClick={connectWallet}>
+            {connected ? "Disconnect Wallet" : "Connect Wallet"}
+          </Button>
+          {userAddress && <Text>Connected Address: {userAddress}</Text>}
         </Flex>
       </Center>
       <Flex
@@ -68,6 +117,7 @@ function App() {
           Get all the ERC-20 token balances of this address:
         </Heading>
         <Input
+          value={userAddress}
           onChange={(e) => setUserAddress(e.target.value)}
           color="black"
           w="600px"
